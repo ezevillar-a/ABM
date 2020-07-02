@@ -6,11 +6,18 @@ var app = express();
 app.use(bodyParser.json());
 
 // Conectar con una Base de Datos
-var con = mysql.createConnection({
+/*var con = mysql.createConnection({
   host: "104.155.161.18",
   user: "root",
   password: "uade",
   database: "alexo"
+});
+*/
+var con = mysql.createConnection({
+  host: "127.0.0.1",
+  user: "root",
+  password: "",
+  database: "sistema"
 });
 
 con.connect(function (err) {
@@ -22,6 +29,61 @@ con.connect(function (err) {
     console.log("Programa escuchando en puerto 3005");
   });
 });
+
+//////////////////////////////
+///////// usuarios /////////
+//////////////////////////////
+
+// Listar usuarios
+app.get('/usuarios', function(request, response) {
+  // SELECT en la tabla de productos
+  con.query("SELECT * FROM usuarios", function (err, result) {
+    if (err) throw err;
+    // Devuelvo resultado del select
+    response.send(result);
+  });
+});
+
+// Crear usuario
+app.post('/usuario', function(req, res) {
+  var usuario = req.body;
+  if (!usuario.nombre || !usuario.apellido) {
+    return res.send("El nombre y apellido del usuario no puede ser vacio");
+  }
+
+  var usuarioArray = [
+    usuario.apellido,
+    usuario.nombre,
+    usuario.direccion
+  ];
+
+  con.query("INSERT INTO usuarios (apellido, nombre, direccion) VALUES (?, ?, ?) ", usuarioArray, function(err, result) {
+    if (err) throw err;
+
+    res.send("Se ha creado el usuario: " + result.id);
+  });
+});
+
+//Buscar usuario por ID (TODO)
+app.get('/usuarios/:idUsuario', function(request, response) {
+  var idUsuario = parseInt(request.params.idUsuario);
+  if (isNaN(idUsuario)) {
+    return response.send("Debe ingresar un número como parámetro.");
+  }
+
+  // SELECT a la tabla de productos con WHERE idUsuario
+  con.query("SELECT * FROM usuarios WHERE id = ?", [idUsuario], function (err, result) {
+    if (err) throw err;
+
+    if (result.length == 0) {
+      return response.send("No se encontraron resultados con el idUsuario " + idUsuario);
+    }
+
+    // Devuelvo resultado del select
+    response.send(result);
+  });
+});
+
 
 //////////////////////////////
 ///////// estudiante /////////
